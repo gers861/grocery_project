@@ -37,5 +37,5 @@ router.register(r'behavior-logs', views.BehaviorLogViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path("ml_recommendations/", views.ml_recommendations, name="ml_recommendations"),
+    path("api/ml_recommendations/", views.ml_recommendations, name="ml_recommendations"),
 ]
