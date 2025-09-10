@@ -20,7 +20,7 @@ from core import views
 from .views import (
     UserViewSet, ProductViewSet, CartViewSet, CartItemViewSet,
     OrderViewSet, RecommendationLogViewSet, BehaviorLogViewSet,
-    ml_recommendations,checkout
+    ml_recommendations,checkout_cart
 )
 from django.contrib import admin
 from django.conf.urls.static import static
@@ -38,7 +38,7 @@ router.register(r'behavior-logs', BehaviorLogViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path("api/checkout/<int:cart_id>/", views.checkout_cart, name="checkout"),# 👈 new
+    path("api/checkout_cart/<int:cart_id>/", views.checkout_cart, name="checkout_cart"),# 👈 new
     path('ml_recommendations/', ml_recommendations, name="ml_recommendations"),
     path('admin/', admin.site.urls),
 ]

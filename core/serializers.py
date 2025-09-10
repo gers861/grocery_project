@@ -53,14 +53,15 @@ class OrderItemReadSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemWriteSerializer(many=True, write_only=True)
-    order_items = OrderItemReadSerializer(many=True, read_only=True, source="items")
+    # Use the correct related_name from OrderItem
+    items = OrderItemReadSerializer(many=True, read_only=True)
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Order
-        fields = ("id", "user", "order_date", "total_amount", "items", "order_items")
-        read_only_fields = ("id", "order_date", "total_amount", "order_items")
-
+        fields = ["id", "user", "order_date", "total_amount", "items"]
+        
+        
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])
         order = Order.objects.create(**validated_data)

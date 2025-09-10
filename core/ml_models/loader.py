@@ -119,7 +119,7 @@ def recommend_for_user(user_raw_id, basket_names, top_k=5):
         is_known_user = False
 
     if not basket_idxs:
-        # no known items → item–item fallback (prevents “whole milk always” pop-list)
+        # no known items → item–item fallback 
         return _item_item_fallback([], top_k=top_k)
 
     if not is_known_user:

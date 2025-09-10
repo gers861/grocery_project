@@ -51,55 +51,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 logger = logging.getLogger(__name__)
 
-@api_view(["POST"])
-def checkout(request, cart_id):
-    """
-    Convert Cart → Order, then fetch AI recommendations
-    """
-    try:
-        cart = Cart.objects.prefetch_related("items__product").get(id=cart_id)
-        user = cart.user
 
-        # Create Order
-        order = Order.objects.create(
-            user=user,
-            total_amount=sum(item.product.price * item.quantity for item in cart.items.all())
-        )
-
-        # Create OrderItems
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.price,
-            )
-
-        # Build basket for ML
-        basket = [item.product.name for item in cart.items.all()]
-        recos = recommend_for_user(user.id, basket, top_k=5)
-
-        # Save reco log
-        RecommendationLog.objects.create(
-            user=user,
-            order=order,
-            recommendations=recos,
-            source="ml",
-        )
-
-        # Clear cart after checkout
-        cart.items.all().delete()
-
-        return Response(
-            {"order_id": order.id, "recommendations": recos},
-            status=status.HTTP_201_CREATED
-        )
-
-    except Cart.DoesNotExist:
-        return Response({"error": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        logger.error("Checkout failed: %s", str(e))
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class RecommendationLogViewSet(viewsets.ModelViewSet):
     queryset = RecommendationLog.objects.all()
     serializer_class = RecommendationLogSerializer
@@ -117,12 +69,19 @@ def checkout_cart(request, cart_id):
     """
     try:
         cart = get_object_or_404(Cart, id=cart_id)
+        
+        # 🚨 Check if cart is empty
+        if not cart.items.exists():
+            return Response(
+                {"error": "Cart is empty. Add products before checkout."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # 1. Create a new Order
         order = Order.objects.create(
             user=cart.user,
             total_amount=sum(
-                item.product.price * item.quantity for item in cart.items.all()
+            item.product.price * item.quantity for item in cart.items.all()
             )
         )
 
